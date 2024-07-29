@@ -1,1 +1,1 @@
-from . import PyCorrPlot
+from .PyCorrPlot import *
