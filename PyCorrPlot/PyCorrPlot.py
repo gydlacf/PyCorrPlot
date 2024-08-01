@@ -13,7 +13,8 @@ class PyCorrPlot:
                  **kwargs):
                      
         cmap = kwargs.get('cmap', 'seismic')
-                     
+        label = kwargs.get('label', 'significance')
+        
         rows, cols = rmatrix.shape
                      
         shift = 1 / (rows * 2)
@@ -46,24 +47,32 @@ class PyCorrPlot:
                            c=rmatrix.values.ravel(),
                            s=np.abs(rmatrix.values.ravel()) * s**2,
                            cmap=cmap)
-                     
         ax.set_xticks(steps,
                       labels=rmatrix.index)
         ax.set_yticks(steps,
                       labels=rmatrix.columns[::-1])
-                      
-        if pmatrix is not None:
-            for (x, y), p, r in zip(grid, 
-                                    pmatrix.values.ravel(),
-                                    rmatrix.values.ravel()):
-                if not np.isnan(p) and p < plim:
-                    #annot = '***' if p < 1e-3 else '**' if p < 1e-2 else '*'
-                    fontcolor = 'w' if np.abs(p) > 0.9 else 'k'
-                    ax.text(x, y, f'{p:.4f}',
-                            fontsize=s / 4,
-                            color=fontcolor,
-                            horizontalalignment='center',
-                            verticalalignment='center_baseline')
+        
+        prav = pmatrix[pmatrix < plim].values.ravel()
+        
+        ind = ~np.isnan(prav)
+        
+        if label == 'significance':              
+            ax.scatter(grid[ind, 0], grid[ind, 1],
+                       c='white',
+                       s=32,
+                       marker='*')
+        elif label == 'pvalue':
+            if pmatrix is not None:
+                for (x, y), p, r in zip(grid, 
+                                        pmatrix.values.ravel(),
+                                        rmatrix.values.ravel()):
+                    if not np.isnan(p) and p < plim:
+                        fontcolor = 'w' if np.abs(p) > 0.9 else 'k'
+                        ax.text(x, y, f'{p:.4f}',
+                                fontsize=s / 4,
+                                color=fontcolor,
+                                horizontalalignment='center',
+                                verticalalignment='center_baseline')
                            
 
         fig.colorbar(lines,
