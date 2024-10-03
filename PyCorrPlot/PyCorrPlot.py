@@ -8,7 +8,7 @@ class PyCorrPlot:
     def __init__(self, 
                  rmatrix:pd.DataFrame,
                  pmatrix:pd.DataFrame,
-                 ax=None,
+                 ax,
                  plim=0.05,
                  **kwargs):
                      
@@ -16,43 +16,43 @@ class PyCorrPlot:
         label = kwargs.get('label', 'significance')
         
         rows, cols = rmatrix.shape
-                     
-        shift = 1 / (rows * 2)
         
-        steps = np.linspace(shift, 
-                            1 - shift, 
-                            rows)
-                     
-        grid = np.meshgrid(steps, steps[::-1])
-         
+        grid = np.meshgrid(np.arange(rows),
+                           np.flipud(np.arange(cols)))
+                           
         grid = np.stack([gr.ravel() for gr in grid]).T
-        
-        if ax is None:
-            fig, ax = pl.subplots(figsize=(8, 6),
-                                  facecolor='white')
-        
-        # set aspect ratio to 1
+           
+        # set aspect ratio
         ax.set_aspect('equal')
         
         #perform the changes
-        fig.canvas.draw()
+        ax.figure.canvas.draw()
         
-                                  
         # set marker size
         bbox = ax.get_window_extent()
         
-        s = (bbox.width * 72 / (rmatrix.shape[0] * fig.dpi) * 0.8)
+        rmatrix.dtype = float
+        
+        ss = 320 * rmatrix.values.ravel()**2
+        ss = ss.astype(float)
         
         lines = ax.scatter(grid[:, 0], grid[:, 1],
                            c=rmatrix.values.ravel(),
-                           s=np.abs(rmatrix.values.ravel()) * s**2,
+                           s=ss,
                            cmap=cmap)
-        ax.set_xticks(steps,
+        ax.set_xticks(np.arange(rows),
                       labels=rmatrix.index)
-        ax.set_yticks(steps,
+        ax.set_yticks(np.arange(cols),
                       labels=rmatrix.columns[::-1])
         
-        prav = pmatrix[pmatrix < plim].values.ravel()
+        ax.tick_params(axis='x',
+                       labelrotation=90)
+        
+        ax.set_xlim([-1, rows])
+        ax.set_ylim([-1, cols])
+                       
+        prav = pmatrix[pmatrix < plim].values.ravel().astype(float)
+        
         
         ind = ~np.isnan(prav)
         
@@ -74,20 +74,29 @@ class PyCorrPlot:
                                 horizontalalignment='center',
                                 verticalalignment='center_baseline')
                            
-
-        fig.colorbar(lines,
-                     cmap=cmap)
+        
+                                
+        ax.figure.colorbar(lines,
+                           cmap=cmap)
                      
-        pl.show()
-
         
 def pycorrplot(rmatrix,
                pmatrix=None,
+               ax=None,
                **kwargs):
+    if ax is None:
+        fig, ax = pl.subplots(figsize=(8, 6),
+                              facecolor='white')
+
+                   
     plot = PyCorrPlot(rmatrix,
                       pmatrix,
+                      ax=ax,
                       **kwargs)
                       
+    pl.show()
+                      
+    return ax.figure, ax
                       
 if __name__ == '__main__':
     from numpy.random import random
