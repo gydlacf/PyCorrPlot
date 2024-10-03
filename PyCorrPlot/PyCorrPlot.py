@@ -33,7 +33,9 @@ class PyCorrPlot:
         
         rmatrix.dtype = float
         
-        ss = 320 * rmatrix.values.ravel()**2
+        #s = (np.abs(rmatrix.values.ravel()) * 0.8) + 0.2
+        
+        ss = 320 * np.abs(rmatrix.values.ravel())
         ss = ss.astype(float)
         
         lines = ax.scatter(grid[:, 0], grid[:, 1],
@@ -86,7 +88,8 @@ def pycorrplot(rmatrix,
                **kwargs):
     if ax is None:
         fig, ax = pl.subplots(figsize=(8, 6),
-                              facecolor='white')
+                              facecolor='white',
+                              layout='constrained')
 
                    
     plot = PyCorrPlot(rmatrix,
